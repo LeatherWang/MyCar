@@ -23,6 +23,7 @@ public:
     enum Shape{Line,Rectangle,RoundRect,Ellipse,Polygon,Polyline,Points,Arc,Path,Text,Pixmap};
     void paintEvent(QPaintEvent *);
     void mousePressEvent(QMouseEvent *);
+    void MyCarComeBack(quint16 x,quint16 y);
 //    void mouseMoveEvent(QMouseEvent *);
 //    void mouseReleaseEvent(QMouseEvent *);
 signals:
@@ -33,8 +34,15 @@ private slots:
 
     void on_clear_pushButton_clicked();
 
+
 private:
     Ui::Form *ui;
+
+    QColor color;
+    Qt::PenStyle style;
+    Qt::PenCapStyle cap;
+    Qt::PenJoinStyle join;
+    quint8 value;
 
     Shape shape;
     QPen pen;
@@ -43,11 +51,10 @@ private:
 
     QPixmap pix;
     QPoint lastPoint;
-    QPoint endPoint;
+    QPoint endPoint,endPoint_1;
 
-    quint16 PixMapWidth = 700;
-    quint16 PixMapHeight = 700;
-
+    quint16 PixMapWidth;
+    quint16 PixMapHeight;
 };
 
 #endif // FORM_H

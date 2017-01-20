@@ -14,14 +14,16 @@ Form::Form(QWidget *parent) :
     setFixedSize(810,700);
     setAttribute(Qt::WA_QuitOnClose,false);//主窗口关闭其跟着一起关闭
 
+    PixMapWidth = 700;
+    PixMapHeight = 700;
     pix = QPixmap(PixMapWidth,PixMapHeight);
     pix.fill(Qt::white);   //背景填充为红色
 
-    QColor color(0,0,255);//画笔颜色
-    Qt::PenStyle style = Qt::PenStyle(1);//画笔风格，SolidLine
-    Qt::PenCapStyle cap = Qt::PenCapStyle(0x10);//画笔顶帽，SquareCap
-    Qt::PenJoinStyle join=Qt::PenJoinStyle(0x40);//画笔连接点，BevelJoin
-    int value = 3;//设置线宽，0~20
+    color = QColor(0,0,255);//画笔颜色
+    style = Qt::PenStyle(1);//画笔风格，SolidLine
+    cap = Qt::PenCapStyle(0x10);//画笔顶帽，SquareCap
+    join=Qt::PenJoinStyle(0x40);//画笔连接点，BevelJoin
+    value = 3;//设置线宽，0~20
     pen = QPen(color,value,style,cap,join);//设置画笔
 
     QColor color_brush(100,100,100);//画刷颜色
@@ -52,19 +54,41 @@ void Form::mousePressEvent(QMouseEvent *event)
         ui->startY_label->setText(QString::number(lastPoint.y(),10));
         ui->endX_label->setText(QString::number(endPoint.x(),10));
         ui->endY_label->setText(QString::number(endPoint.y(),10));
-        update();
+        //update();
         emit MyCarClickedSignal(quint16(endPoint.x()),quint16(endPoint.y()));//0~700
     }
+}
+bool ComeBackFlag = false;
+void Form::MyCarComeBack(quint16 x, quint16 y)
+{
+    endPoint_1 = QPoint(x,y);
+    ComeBackFlag = true;
+    update();
 }
 
 void Form::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     QPainter pp(&pix);
-    pp.setPen(pen);
+    if(ComeBackFlag == true)
+    {
+        color = QColor(0,255,0);//画笔颜色
+        value = 3;
+        pen = QPen(color,value,style,cap,join);
+        pp.setPen(pen);
+        ComeBackFlag = false;
+        pp.drawLine(lastPoint, endPoint_1);//绘制连续的线段
+        lastPoint = endPoint_1;
+    }
+    else
+    {
+        color = QColor(0,0,255);//画笔颜色
+        value = 2;
+        pen = QPen(color,value,style,cap,join);
+        pp.setPen(pen);
+        pp.drawLine(lastPoint, endPoint);//绘制连续的线段
+    }
 
-    pp.drawLine(lastPoint, endPoint);//绘制连续的线段
-    lastPoint = endPoint;
     painter.drawPixmap(0, 0, pix);
 
    // painter.setPen(pen);
@@ -153,3 +177,4 @@ void Form::on_clear_pushButton_clicked()
     pix = clearPix;
     update();
 }
+

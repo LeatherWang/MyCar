@@ -53,6 +53,10 @@ private:
     void stringToHtmlFilter(QString &str);
     void stringToHtml(QString &str,QColor crl);
 
+    QByteArray byteArray;
+    QByteArray zhentou;
+    void Leather_Data_Receive(QByteArray data);
+
 
 private slots:
     void on_pushButton_openClose_clicked();

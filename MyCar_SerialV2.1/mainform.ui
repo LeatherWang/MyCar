@@ -130,6 +130,9 @@
            <property name="text">
             <string>十六进制接收</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
@@ -243,7 +246,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -462,12 +465,17 @@ p, li { white-space: pre-wrap; }
          <rect>
           <x>210</x>
           <y>210</y>
-          <width>75</width>
-          <height>23</height>
+          <width>171</width>
+          <height>91</height>
          </rect>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
         <property name="text">
-         <string>PushButton</string>
+         <string>打开小车控制器</string>
         </property>
        </widget>
       </widget>

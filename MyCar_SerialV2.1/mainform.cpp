@@ -1,3 +1,13 @@
+/*******************************************************************************
+  *作者：LeatherWang
+  *最后修改时间：2017年1月20日
+  *功能：1、串口基本功能
+  *     2、加入小车位置控制器，指点运动
+  *     3、根据接收区数据大小，自动清除接收区
+  *     4、加入接收下位机数据代码->DONE!
+  *     5、跳支舞，比如，走个矩形？
+  ******************************************************************************/
+
 #include "mainform.h"
 #include "ui_mainform.h"
 #include <QDebug>
@@ -128,6 +138,10 @@ mainform::mainform(QWidget *parent) :
 
     myForm = new Form;
     connect(myForm,SIGNAL(MyCarClickedSignal(quint16,quint16)),this,SLOT(MyCarClickedSlot(quint16,quint16)));
+
+    zhentou.resize(2);
+    zhentou[0] = 0XAA;
+    zhentou[1] = 0XAF;
 }
 
 mainform::~mainform()
@@ -578,16 +592,13 @@ void mainform::stringToHtml(QString &str,QColor crl)
   *功能：从串口读取数据，并显示在界面
         显示时要根据是否16进制而做改变
   *******************************************/
-QByteArray byteArray;
-QByteArray zhentou(2,0XAA);
 void mainform::readMyCom()    //读串口发来的数据，并显示出来
 {
     if(m_Com->bytesAvailable()>0)
     {
         //保持滚动条在最下方
-        QByteArray data;
         ui->textBrowser->moveCursor(QTextCursor::End);
-        data = m_Com->readAll();
+        const QByteArray data = m_Com->readAll();
         m_number_recive += data.size();
         if(ui->checkBox->isChecked())
         {
@@ -603,15 +614,16 @@ void mainform::readMyCom()    //读串口发来的数据，并显示出来
 
 /****************************** Start user code for include. **********************************/
             byteArray.append(data);
-            if(byteArray.size() >= 7)//TODO
+
+            if(byteArray.size() >= 9)//DONE!!
             {
                // qDebug()<<byteArray;
                 if(byteArray.contains(zhentou))
                 {
-                    QByteArray byteArray_1 =  byteArray.mid(byteArray.indexOf(zhentou),7);
-                    if(byteArray_1.at(2) == 0x05)
-                        byteArray_1 = byteArray.mid(byteArray.indexOf(zhentou),11);
-                    //Leather_Data_Receive(byteArray_1);
+                    QByteArray byteArray_1 =  byteArray.mid(byteArray.indexOf(zhentou),4);//第四位为数据长度，非帧长度，帧长度=数据长度+5
+                    byteArray_1 = byteArray.mid(byteArray.indexOf(zhentou),byteArray_1.at(3)+5);
+//                    qDebug()<<byteArray_1<<"  ";
+                    Leather_Data_Receive(byteArray_1);
                 }
                 byteArray.clear();
             }
@@ -624,6 +636,47 @@ void mainform::readMyCom()    //读串口发来的数据，并显示出来
         AutoReply(data);//调用自动回复函数
         showCountNumber();
     }
+}
+
+#include "math.h"
+typedef union
+{
+    quint16 sum;//int = qint32
+    quint8 son[2];
+} MyUnion;
+MyUnion Union_dataBuf;
+quint16 Position_A,Position_B;
+void mainform::Leather_Data_Receive(QByteArray data)
+{
+    quint8 sum = 0;
+    quint8 num = data.size();
+    for(quint8 i=0;i<(num-1);i++)
+        sum += (quint8(data.at(i)));
+    if(!(sum == quint8(data.at(num-1))))	return;		//判断sum，校验--Leather
+    if(!(quint8(data.at(0))==0xAA && quint8(data.at(1))==0xAF))		return;		//判断帧头--Leather
+
+    if((quint8(data.at(2)) == 0X01)&&ui->checkBox->isChecked()&&(myForm->isActiveWindow()))
+    {
+        Union_dataBuf.son[1] = quint8(data.at(4));
+        Union_dataBuf.son[0] = quint8(data.at(5));
+        Position_A = Union_dataBuf.sum;
+
+        Union_dataBuf.son[1] = quint8(data.at(6));
+        Union_dataBuf.son[0] = quint8(data.at(7));
+        Position_B = Union_dataBuf.sum;
+//        qDebug()<<Position_A<<Position_B;
+        myForm->MyCarComeBack(Position_A,Position_B);
+    }
+}
+
+void mainform::on_openMap_button_clicked()
+{
+    myForm->show();
+}
+
+void mainform::MyCarClickedSlot(quint16 x , quint16 y)
+{
+    Leather_Data_Send(x,y,0x01);
 }
 
 /****************************** Start user code for include. **********************************/
@@ -658,15 +711,7 @@ void mainform::Leather_Data_Send(quint16 posionX, quint16 posionY, quint8 flag)
 }
 /********************************* End user code. *********************************************/
 
-void mainform::on_openMap_button_clicked()
-{
-    myForm->show();
-}
 
-void mainform::MyCarClickedSlot(quint16 x , quint16 y)
-{
-    Leather_Data_Send(x,y,0x01);
-}
 
 
 
